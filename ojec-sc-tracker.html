@@ -355,7 +355,7 @@ footer .sig{ font-weight:600; color:var(--ink-2);}
   <div class="modal" role="dialog" aria-modal="true">
     <h3 id="modalTitle">Add consultant</h3>
     <div class="field"><label for="cName">Name</label><input type="text" id="cName" placeholder="e.g. Ahmad bin Rahim" autocomplete="off"></div>
-    <div class="field"><label for="cRegion">Region / outlet (optional)</label><input type="text" id="cRegion" placeholder="e.g. Kuala Lumpur Showroom" autocomplete="off"></div>
+    <div class="field"><label for="cRegion">Outlet</label><select id="cRegion"></select></div>
     <div class="btns">
       <button class="btn ghost" id="modalCancel">Cancel</button>
       <button class="btn primary" id="modalSave">Save</button>
@@ -385,6 +385,24 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 function initials(name){ return (name||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
 function recKey(cid, m){ return cid + "|" + m; }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* The two BYD EV Supreme outlets */
+const OUTLETS = ["BYD EV Supreme Batu Pahat", "BYD EV Supreme Kluang"];
+function regionOptions(selected){
+  const sel = document.getElementById("cRegion");
+  sel.innerHTML = '<option value="">Select outlet</option>';
+  OUTLETS.forEach(o=>{
+    const opt = document.createElement("option");
+    opt.value = o; opt.textContent = o;
+    sel.appendChild(opt);
+  });
+  if(selected && !OUTLETS.includes(selected)){
+    const opt = document.createElement("option");
+    opt.value = selected; opt.textContent = selected;
+    sel.appendChild(opt);
+  }
+  sel.value = selected || "";
+}
 
 function save(){ localStorage.setItem(DB_KEY, JSON.stringify(state)); }
 function load(){
@@ -552,7 +570,7 @@ function openModal(id){
   const c = editingId ? state.consultants.find(x=>x.id===editingId) : null;
   document.getElementById("modalTitle").textContent = c ? "Edit consultant" : "Add consultant";
   document.getElementById("cName").value = c ? c.name : "";
-  document.getElementById("cRegion").value = c ? (c.region||"") : "";
+  regionOptions(c ? c.region : "");
   document.getElementById("overlay").classList.add("show");
   document.getElementById("cName").focus();
 }
