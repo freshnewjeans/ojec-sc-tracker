@@ -136,6 +136,10 @@ body::after{ content:""; position:fixed; inset:0; z-index:0; pointer-events:none
 .monthchip button:hover{ color:var(--accent); background:var(--accent-soft);}
 .monthchip .m-label{ min-width:102px; text-align:center; font-size:13.5px; font-weight:700; padding:9px 2px;}
 .outlet-filter{ width:auto; max-width:100%; padding:9px 12px; font-size:14px; }
+.seg{ display:inline-flex; background:var(--panel); border:1px solid var(--border); border-radius:11px; overflow:hidden; box-shadow:var(--shadow-sm);}
+.seg button{ border:none; background:transparent; cursor:pointer; padding:9px 13px; font-family:inherit; font-size:13px; font-weight:700; color:var(--ink-2); transition:color .15s, background .15s;}
+.seg button:hover{ color:var(--ink);}
+.seg button.active{ background:var(--accent-soft); color:var(--accent);}
 /* ============ Buttons ============ */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:7px; border:none; cursor:pointer;
@@ -411,6 +415,11 @@ footer .sig{ font-weight:700; background:linear-gradient(90deg,var(--accent),var
           <div class="m-label" id="logMonth"></div>
           <button id="logNext" aria-label="Next month">&rsaquo;</button>
         </div>
+        <div class="seg" id="logStatusSeg" role="group" aria-label="Filter by status">
+          <button data-status="" class="active">All</button>
+          <button data-status="done">Completed</button>
+          <button data-status="pending">Pending</button>
+        </div>
         <select class="outlet-filter" data-outlet aria-label="Filter by outlet">
           <option value="">All outlets</option>
           <option value="BYD EV Supreme Batu Pahat">BYD EV Supreme Batu Pahat</option>
@@ -511,6 +520,7 @@ let state = { consultants: [], records: [] };
 let month = monthKey(new Date());
 let editingId = null;
 let outletFilter = "";
+let logStatus = "";
 
 /* ---------- helpers ---------- */
 function monthKey(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); }
@@ -693,7 +703,10 @@ function renderLog(){
   }
   let logList = state.consultants.filter(outletMatches);
   if(!outletFilter) logList = outletSort(logList); else logList.sort((a,b)=>a.name.localeCompare(b.name));
-  if(logList.length===0){ list.innerHTML = '<div class="empty">No consultants at this outlet.</div>'; return; }
+  if(logStatus==="done") logList = logList.filter(c=>isDone(c.id,month));
+  else if(logStatus==="pending") logList = logList.filter(c=>!isDone(c.id,month));
+  else logList.sort((a,b)=>{ const da=isDone(a.id,month)?1:0, db=isDone(b.id,month)?1:0; return da!==db ? db-da : a.name.localeCompare(b.name); });
+  if(logList.length===0){ list.innerHTML = '<div class="empty">No consultants match this filter.</div>'; return; }
   logList.forEach(c=>{
     const r = recFor(c.id, month);
     const done = !!(r && r.completed);
@@ -955,6 +968,11 @@ load();
 applyTheme(isDark);
 bindFilterSelects();
 renderFilterSelects();
+document.querySelectorAll("#logStatusSeg button").forEach(b=> b.addEventListener("click", ()=>{
+  logStatus = b.dataset.status || "";
+  document.querySelectorAll("#logStatusSeg button").forEach(x=> x.classList.toggle("active", x===b));
+  renderLog(); renderDashboard();
+}));
 showView("dashboard");
 </script>
 </body>
