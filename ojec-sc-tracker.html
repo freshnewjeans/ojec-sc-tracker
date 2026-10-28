@@ -119,6 +119,7 @@ body{
 .monthchip button{ border:none; background:transparent; cursor:pointer; padding:9px 13px; color:var(--ink-2); font-family:inherit; font-size:16px; line-height:1; transition:color .12s, background .12s;}
 .monthchip button:hover{ color:var(--accent); background:var(--accent-soft);}
 .monthchip .m-label{ min-width:98px; text-align:center; font-size:14px; font-weight:700; padding:9px 2px;}
+.outlet-filter{ width:auto; max-width:100%; padding:9px 12px; font-size:14px; }
 /* ============ Buttons ============ */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:7px; border:none; cursor:pointer;
@@ -325,6 +326,11 @@ footer .sig{ font-weight:600; color:var(--ink-2);}
           <div class="m-label" id="dashMonth"></div>
           <button id="dashNext" aria-label="Next month">&rsaquo;</button>
         </div>
+        <select class="outlet-filter" data-outlet aria-label="Filter by outlet">
+          <option value="">All outlets</option>
+          <option value="BYD EV Supreme Batu Pahat">BYD EV Supreme Batu Pahat</option>
+          <option value="BYD EV Supreme Kluang">BYD EV Supreme Kluang</option>
+        </select>
       </div>
     </div>
     <div class="hero">
@@ -366,6 +372,11 @@ footer .sig{ font-weight:600; color:var(--ink-2);}
           <div class="m-label" id="logMonth"></div>
           <button id="logNext" aria-label="Next month">&rsaquo;</button>
         </div>
+        <select class="outlet-filter" data-outlet aria-label="Filter by outlet">
+          <option value="">All outlets</option>
+          <option value="BYD EV Supreme Batu Pahat">BYD EV Supreme Batu Pahat</option>
+          <option value="BYD EV Supreme Kluang">BYD EV Supreme Kluang</option>
+        </select>
       </div>
     </div>
     <div class="panel">
@@ -381,7 +392,14 @@ footer .sig{ font-weight:600; color:var(--ink-2);}
         <h1>Sales Consultant Roster</h1>
         <div class="sub">Your team list — used by every month&rsquo;s OJEC log</div>
       </div>
-      <div class="controls"><button class="btn primary" id="rosterAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add consultant</button></div>
+      <div class="controls">
+        <select class="outlet-filter" data-outlet aria-label="Filter by outlet">
+          <option value="">All outlets</option>
+          <option value="BYD EV Supreme Batu Pahat">BYD EV Supreme Batu Pahat</option>
+          <option value="BYD EV Supreme Kluang">BYD EV Supreme Kluang</option>
+        </select>
+        <button class="btn primary" id="rosterAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add consultant</button>
+      </div>
     </div>
     <div class="panel">
       <div class="tablewrap">
@@ -453,6 +471,7 @@ const DB_KEY = "ojec-tracker-v1";
 let state = { consultants: [], records: [] };
 let month = monthKey(new Date());
 let editingId = null;
+let outletFilter = "";
 
 /* ---------- helpers ---------- */
 function monthKey(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); }
@@ -479,6 +498,20 @@ function regionOptions(selected){
     sel.appendChild(opt);
   }
   sel.value = selected || "";
+}
+
+/* ---------- Outlet filter & sort ---------- */
+const OUTLET_ORDER = { "BYD EV Supreme Batu Pahat": 0, "BYD EV Supreme Kluang": 1 };
+function outletMatches(c){ return !outletFilter || c.region === outletFilter; }
+function outletRank(c){ return (c.region in OUTLET_ORDER) ? OUTLET_ORDER[c.region] : 99; }
+function outletSort(list){ return list.slice().sort((a,b)=>{ const ra=outletRank(a), rb=outletRank(b); return ra!==rb ? ra-rb : a.name.localeCompare(b.name); }); }
+function renderFilterSelects(){
+  document.querySelectorAll("select[data-outlet]").forEach(sel=>{ sel.value = outletFilter || ""; });
+}
+function bindFilterSelects(){
+  document.querySelectorAll("select[data-outlet]").forEach(sel=>{
+    sel.addEventListener("change", ()=>{ outletFilter = sel.value || ""; renderFilterSelects(); renderDashboard(); renderLog(); renderRoster(); });
+  });
 }
 
 /* ---------- WhatsApp reminder ---------- */
@@ -584,7 +617,11 @@ function renderDashboard(){
     list.innerHTML = '<div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>No consultants yet.<br>Add your sales team on the <b>SC Roster</b> tab.</div>';
     return;
   }
-  const sorted = sortedByScore(month);
+  const sorted = sortedByScore(month).filter(x=>outletMatches(x.c));
+  if(sorted.length===0){
+    list.innerHTML = '<div class="empty">No consultants at this outlet for this month.</div>';
+    return;
+  }
   sorted.forEach(({c, done, score}, i)=>{
     const pct = done && score!==null && score!=="" ? Math.min(100, Number(score)) : 0;
     const row = document.createElement("div");
@@ -614,7 +651,10 @@ function renderLog(){
     list.innerHTML = '<div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>No consultants yet. Add your team on the <b>SC Roster</b> tab first.</div>';
     return;
   }
-  state.consultants.forEach(c=>{
+  let logList = state.consultants.filter(outletMatches);
+  if(!outletFilter) logList = outletSort(logList); else logList.sort((a,b)=>a.name.localeCompare(b.name));
+  if(logList.length===0){ list.innerHTML = '<div class="empty">No consultants at this outlet.</div>'; return; }
+  logList.forEach(c=>{
     const r = recFor(c.id, month);
     const done = !!(r && r.completed);
     const score = (r && r.score!==null && r.score!==undefined) ? r.score : "";
@@ -666,7 +706,10 @@ function renderRoster(){
     body.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>No consultants yet. Click <b>Add consultant</b> to build your team.</div></td></tr>';
     return;
   }
-  state.consultants.forEach(c=>{
+  let rosterList = state.consultants.filter(outletMatches);
+  if(!outletFilter) rosterList = outletSort(rosterList); else rosterList.sort((a,b)=>a.name.localeCompare(b.name));
+  if(rosterList.length===0){ body.innerHTML = '<tr><td colspan="4"><div class="empty">No consultants at this outlet.</div></td></tr>'; return; }
+  rosterList.forEach(c=>{
     const done = isDone(c.id, month);
     const score = getScore(c.id, month);
     const tr = document.createElement("tr");
@@ -869,6 +912,8 @@ themeBtn.addEventListener("click", ()=>{
 /* ============ Init ============ */
 load();
 applyTheme(isDark);
+bindFilterSelects();
+renderFilterSelects();
 showView("dashboard");
 </script>
 </body>
