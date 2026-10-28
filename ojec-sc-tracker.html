@@ -479,6 +479,7 @@ function monthLabel(m){ const [y,mo]=m.split("-"); return new Date(Number(y),Num
 function shiftMonth(m, delta){ const [y,mo]=m.split("-").map(Number); const d=new Date(y,mo-1+delta,1); return monthKey(d); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function initials(name){ return (name||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase(); }
+function titleCase(s){ return String(s||"").trim().replace(/\S+/g, w=> w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()); }
 function recKey(cid, m){ return cid + "|" + m; }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -526,7 +527,7 @@ function waNumber(raw){
 function waMarkup(c){
   const p = waNumber(c.phone);
   if(p){
-    const msg = encodeURIComponent("Hi " + firstWord(c.name) + ", just a friendly reminder to complete your OJEC assessment for " + monthLabel(month) + ". Thanks!");
+    const msg = encodeURIComponent("Hi " + firstWord(titleCase(c.name)) + ", just a friendly reminder to complete your OJEC assessment for " + monthLabel(month) + ". Thanks!");
     return '<a class="wa-btn" href="https://wa.me/' + p + '?text=' + msg + '" target="_blank" rel="noopener" title="WhatsApp OJEC reminder" aria-label="WhatsApp OJEC reminder">' + WA_ICON + '</a>';
   }
   return '<button class="wa-btn off" data-waname="' + esc(c.name) + '" title="No phone number on file" aria-label="No phone number on file">' + WA_ICON + '</button>';
@@ -629,7 +630,7 @@ function renderDashboard(){
     row.innerHTML =
       '<div class="rank '+(i<3?"top":"")+'">'+(i+1)+'</div>'+
       '<div class="avatar">'+esc(initials(c.name))+'</div>'+
-      '<div class="meta"><div class="name">'+esc(c.name)+'</div>'+
+      '<div class="meta"><div class="name">'+esc(titleCase(c.name))+'</div>'+
         '<div class="m2">'+(c.region?esc(c.region):"Sales Consultant")+'</div></div>'+
       '<div class="bar"><i></i></div>'+
       (done
@@ -661,7 +662,7 @@ function renderLog(){
     const row = document.createElement("div");
     row.className = "log-row";
     row.innerHTML =
-      '<div class="meta"><div class="name">'+esc(c.name)+'</div>'+
+      '<div class="meta"><div class="name">'+esc(titleCase(c.name))+'</div>'+
         '<div class="m2" style="font-size:12px;color:var(--ink-3)">'+(c.region?esc(c.region):"&nbsp;")+'</div></div>'+
       '<div class="score-input"><input type="number" min="0" max="100" step="0.1" class="log-score" data-cid="'+c.id+'" value="'+esc(score)+'" placeholder="Score" '+(done?"":"disabled")+'></div>'+
       '<div class="status-pill"><span class="badge '+(done?"ok":"wait")+'" id="pill-'+c.id+'">'+(done?"Completed":"Pending")+'</span></div>'+
@@ -714,7 +715,7 @@ function renderRoster(){
     const score = getScore(c.id, month);
     const tr = document.createElement("tr");
     tr.innerHTML =
-      '<td><b>'+esc(c.name)+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+'</td>'+
+      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+'</td>'+
       '<td><span class="badge '+(done?"ok":"off")+'">'+(done?"Completed":"No entry")+'</span></td>'+
       '<td>'+fmtScore(score)+'</td>'+
       '<td style="white-space:nowrap">'+
@@ -750,7 +751,7 @@ function openModal(id){
 document.getElementById("modalCancel").addEventListener("click", ()=>document.getElementById("overlay").classList.remove("show"));
 document.getElementById("overlay").addEventListener("click", e=>{ if(e.target===document.getElementById("overlay")) document.getElementById("overlay").classList.remove("show"); });
 document.getElementById("modalSave").addEventListener("click", ()=>{
-  const name = document.getElementById("cName").value.trim();
+  const name = titleCase(document.getElementById("cName").value.trim());
   const region = document.getElementById("cRegion").value.trim();
   const phone = document.getElementById("cPhone").value.trim();
   if(!name){ toast("Please enter a name"); document.getElementById("cName").focus(); return; }
@@ -817,10 +818,11 @@ function importCsvText(text){
     if(!name) continue;
     let c = state.consultants.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
     if(!c){
-      c = { id: uid(), name: name.trim(), region: (regionIdx>=0&&cols[regionIdx])?cols[regionIdx]:"", phone: (phoneIdx>=0&&cols[phoneIdx])?cols[phoneIdx]:"" };
+      c = { id: uid(), name: titleCase(name.trim()), region: (regionIdx>=0&&cols[regionIdx])?cols[regionIdx]:"", phone: (phoneIdx>=0&&cols[phoneIdx])?cols[phoneIdx]:"" };
       state.consultants.push(c); added++;
     } else if(phoneIdx>=0 && cols[phoneIdx]) {
       c.phone = cols[phoneIdx];
+      c.name = titleCase(c.name);
     }
     const m = cols[monthIdx] || "";
     const done = doneIdx>=0 && cols[doneIdx]==="true";
