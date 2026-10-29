@@ -345,6 +345,10 @@ footer .sig{ font-weight:700; background:linear-gradient(90deg,var(--accent),var
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v12M12 15l4-4M12 15l-4-4"/><path d="M5 21h14"/></svg>
       Data &amp; Backup
     </button>
+    <button class="tab" data-view="report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+      Monthly Report
+    </button>
   </nav>
 
   <!-- ===== View: Dashboard ===== -->
@@ -488,6 +492,93 @@ footer .sig{ font-weight:700; background:linear-gradient(90deg,var(--accent),var
       </div>
     </div>
   </section>
+
+  <!-- ===== View: Monthly Report ===== -->
+  <section id="view-report" class="view" hidden>
+    <div class="viewhead">
+      <div><h1>Monthly Report</h1><div class="sub">Fill in this month's numbers, then download the PPTX</div></div>
+      <div class="controls">
+        <div class="monthchip">
+          <button id="repPrev" aria-label="Previous month">&lsaquo;</button>
+          <div class="m-label" id="repMonth"></div>
+          <button id="repNext" aria-label="Next month">&rsaquo;</button>
+        </div>
+        <button class="btn primary" id="genPptx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12M12 15l4-4M12 15l-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download PPTX</button>
+      </div>
+    </div>
+
+    <!-- Batu Pahat -->
+    <div class="panel">
+      <div class="panel-head"><h2>Outlet Performance — Batu Pahat</h2></div>
+      <div class="panel-body">
+        <div class="formgrid" style="margin-bottom:16px">
+          <div class="field"><label>Total units sold</label><input type="number" min="0" id="rpBpTotal" placeholder="e.g. 5"></div>
+          <div class="field"><label>Target (units)</label><input type="number" min="0" id="rpBpTarget" placeholder="e.g. 8"></div>
+        </div>
+        <div class="field"><label>Top 3 Best Selling Model (model name — units)</label><div id="rpBpBest"></div></div>
+        <div class="field"><label>Top 3 Low Selling Model (model name — units)</label><div id="rpBpLow"></div></div>
+        <div class="field"><label>Outlet Justification</label><textarea id="rpBpJust" rows="2" style="width:100%;font-family:inherit;font-size:14px;background:var(--panel-solid);border:1px solid var(--border-strong);border-radius:11px;padding:10px 12px;color:var(--ink)" placeholder="e.g. SC zero situation on almost 20 days in the month"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Kluang -->
+    <div class="panel">
+      <div class="panel-head"><h2>Outlet Performance — Kluang</h2></div>
+      <div class="panel-body">
+        <div class="formgrid" style="margin-bottom:16px">
+          <div class="field"><label>Total units sold</label><input type="number" min="0" id="rpKlTotal" placeholder="e.g. 4"></div>
+          <div class="field"><label>Target (units)</label><input type="number" min="0" id="rpKlTarget" placeholder="e.g. 8"></div>
+        </div>
+        <div class="field"><label>Top 3 Best Selling Model (model name — units)</label><div id="rpKlBest"></div></div>
+        <div class="field"><label>Top 3 Low Selling Model (model name — units)</label><div id="rpKLLow"></div></div>
+        <div class="field"><label>Outlet Justification</label><textarea id="rpKlJust" rows="2" style="width:100%;font-family:inherit;font-size:14px;background:var(--panel-solid);border:1px solid var(--border-strong);border-radius:11px;padding:10px 12px;color:var(--ink)" placeholder="e.g. None"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Training -->
+    <div class="panel">
+      <div class="panel-head"><h2>Training executed this month</h2><button class="btn ghost sm" id="rpTrainAdd">+ Add program</button></div>
+      <div class="panel-body"><div id="rpTrainList"></div></div>
+    </div>
+
+    <!-- Manpower -->
+    <div class="panel">
+      <div class="panel-head"><h2>Manpower Update</h2></div>
+      <div class="panel-body">
+        <div class="formgrid">
+          <div class="field"><label>Total outlets</label><input type="number" min="0" id="rpOutlets" value="2"></div>
+          <div class="field"><label>Total In-house Trainer</label><input type="number" min="0" id="rpIht" value="1"></div>
+          <div class="field"><label>Total Live Streamer</label><input type="number" min="0" id="rpStreamer" value="0"></div>
+          <div class="field"><label>SA's resigned</label><input type="number" min="0" id="rpResign" value="0"></div>
+        </div>
+        <p style="font-size:13px;color:var(--ink-2);margin:10px 0 4px">Total Sales Advisor auto-counts from your SC Roster: <b id="rpSaCount" style="color:var(--accent)">0</b></p>
+        <div class="field" style="margin-top:14px"><label>Top 3 Sales Advisors — Batu Pahat (name — units)</label><div id="rpTopBp"></div></div>
+        <div class="field"><label>Top 3 Sales Advisors — Kluang (name — units)</label><div id="rpTopKl"></div></div>
+      </div>
+    </div>
+
+    <!-- OJEC summary -->
+    <div class="panel">
+      <div class="panel-head"><h2>OJEC Summary (auto from Monthly Log)</h2></div>
+      <div class="panel-body">
+        <div class="field"><label>OJEC Topic</label><input type="text" id="rpOjecTopic" value="BYD SSP & MS OJEC & Product OJEC"></div>
+        <div id="rpOjecAuto" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px"></div>
+        <p style="font-size:12.5px;color:var(--ink-3);margin-top:10px">OJEC photos are not embedded — add them yourself in PowerPoint after download.</p>
+      </div>
+    </div>
+
+    <!-- Rookies -->
+    <div class="panel">
+      <div class="panel-head"><h2>Rookie Sales Performance</h2><button class="btn ghost sm" id="rpRookieAdd">+ Add rookie</button></div>
+      <div class="panel-body">
+        <p style="font-size:12.5px;color:var(--ink-3);margin-bottom:12px">Enter units sold per month. Use "-" (dash) before the rookie joined.</p>
+        <div class="tablewrap"><table id="rpRookieTable">
+          <thead><tr><th class="c-name">Name</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th><th></th></tr></thead>
+          <tbody id="rpRookieBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <footer>Designed &amp; Created by <span class="sig">Kevin Lim Fung Yen</span></footer>
@@ -508,6 +599,9 @@ footer .sig{ font-weight:700; background:linear-gradient(90deg,var(--accent),var
 
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 /* ============================================================
    OJEC — Sales Consultant Tracker
@@ -595,6 +689,7 @@ function load(){
     const p = JSON.parse(raw);
     state.consultants = Array.isArray(p.consultants) ? p.consultants : [];
     state.records = Array.isArray(p.records) ? p.records : [];
+    state.reportMonths = (p.reportMonths && typeof p.reportMonths==="object") ? p.reportMonths : {};
   }catch(e){ state = { consultants: [], records: [] }; }
 }
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
@@ -923,6 +1018,7 @@ function showView(v){
   if(v==="dashboard") renderDashboard();
   if(v==="log") renderLog();
   if(v==="roster") renderRoster();
+  if(v==="report") renderReport();
 }
 document.querySelectorAll(".tab").forEach(t=> t.addEventListener("click", ()=>showView(t.dataset.view)));
 document.getElementById("dashPrev").addEventListener("click", ()=>{ month=shiftMonth(month,-1); renderDashboard(); });
@@ -963,11 +1059,337 @@ themeBtn.addEventListener("click", ()=>{
   applyTheme(isDark);
 });
 
+/* ============ Monthly Report: data model ============ */
+function blankOutlet(){ return { total:"", target:"",
+  best:[{m:"",u:""},{m:"",u:""},{m:"",u:""}],
+  low:[{m:"",u:""},{m:"",u:""},{m:"",u:""}],
+  justification:"" }; }
+function blankReport(){ return {
+  bp: blankOutlet(), kl: blankOutlet(),
+  training: [{program:"",status:""}],
+  manpower:{outlets:2,iht:1,streamer:0,resign:0,
+    topBp:[{n:"",u:""},{n:"",u:""},{n:"",u:""}],
+    topKl:[{n:"",u:""},{n:"",u:""},{n:"",u:""}]},
+  ojecTopic:"BYD SSP & MS OJEC & Product OJEC",
+  rookies: []
+};}
+function getReport(){
+  if(!state.reportMonths) state.reportMonths = {};
+  if(!state.reportMonths[month]) state.reportMonths[month] = blankReport();
+  return state.reportMonths[month];
+}
+function modelRow(container, idx, row, key){
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;gap:8px;margin-bottom:6px;align-items:center";
+  wrap.innerHTML =
+    '<span style="width:18px;font-weight:800;color:var(--ink-3)">'+(idx+1)+'</span>'+
+    '<input type="text" data-k="'+key+'" data-i="'+idx+'" data-f="m" placeholder="Model name" style="flex:1">'+
+    '<input type="number" min="0" data-k="'+key+'" data-i="'+idx+'" data-f="u" placeholder="units" style="width:90px">';
+  container.appendChild(wrap);
+  wrap.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", readReportFromForm));
+  wrap.querySelector('[data-f="m"]').value = row.m||"";
+  wrap.querySelector('[data-f="u"]').value = row.u||"";
+}
+function saRow(container, idx, row, key){
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;gap:8px;margin-bottom:6px;align-items:center";
+  wrap.innerHTML =
+    '<span style="width:18px;font-weight:800;color:var(--ink-3)">'+(idx+1)+'</span>'+
+    '<input type="text" data-k="'+key+'" data-i="'+idx+'" data-f="n" placeholder="Name" style="flex:1">'+
+    '<input type="number" min="0" data-k="'+key+'" data-i="'+idx+'" data-f="u" placeholder="units" style="width:90px">';
+  container.appendChild(wrap);
+  wrap.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", readReportFromForm));
+  wrap.querySelector('[data-f="n"]').value = row.n||"";
+  wrap.querySelector('[data-f="u"]').value = row.u||"";
+}
+function renderReport(){
+  const r = getReport();
+  document.getElementById("repMonth").textContent = monthLabel(month);
+  document.getElementById("rpBpTotal").value = r.bp.total;
+  document.getElementById("rpBpTarget").value = r.bp.target;
+  document.getElementById("rpBpJust").value = r.bp.justification;
+  document.getElementById("rpKlTotal").value = r.kl.total;
+  document.getElementById("rpKlTarget").value = r.kl.target;
+  document.getElementById("rpKlJust").value = r.kl.justification;
+  const bpBest=document.getElementById("rpBpBest"); bpBest.innerHTML=""; r.bp.best.forEach((row,i)=>modelRow(bpBest,i,row,"bpBest"));
+  const bpLow=document.getElementById("rpBpLow"); bpLow.innerHTML=""; r.bp.low.forEach((row,i)=>modelRow(bpLow,i,row,"bpLow"));
+  const klBest=document.getElementById("rpKlBest"); klBest.innerHTML=""; r.kl.best.forEach((row,i)=>modelRow(klBest,i,row,"klBest"));
+  const klLow=document.getElementById("rpKLLow"); klLow.innerHTML=""; r.kl.low.forEach((row,i)=>modelRow(klLow,i,row,"klLow"));
+  const tlist=document.getElementById("rpTrainList"); tlist.innerHTML="";
+  r.training.forEach((t,i)=>{
+    const wrap=document.createElement("div");
+    wrap.style.cssText="display:flex;gap:8px;margin-bottom:8px;align-items:center";
+    wrap.innerHTML='<input type="text" data-t="p" data-i="'+i+'" placeholder="Program name" style="flex:1.2">'+
+      '<input type="text" data-t="s" data-i="'+i+'" placeholder="e.g. 6 pax completed on 4 Aug 2026" style="flex:1.5">'+
+      '<button class="btn ghost sm danger" data-t-del="'+i+'">&times;</button>';
+    tlist.appendChild(wrap);
+    wrap.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", readReportFromForm));
+    wrap.querySelector('[data-t="p"]').value = t.program||"";
+    wrap.querySelector('[data-t="s"]').value = t.status||"";
+  });
+  document.getElementById("rpOutlets").value = r.manpower.outlets;
+  document.getElementById("rpIht").value = r.manpower.iht;
+  document.getElementById("rpStreamer").value = r.manpower.streamer;
+  document.getElementById("rpResign").value = r.manpower.resign;
+  document.getElementById("rpSaCount").textContent = state.consultants.length;
+  const topBp=document.getElementById("rpTopBp"); topBp.innerHTML=""; r.manpower.topBp.forEach((row,i)=>saRow(topBp,i,row,"topBp"));
+  const topKl=document.getElementById("rpTopKl"); topKl.innerHTML=""; r.manpower.topKl.forEach((row,i)=>saRow(topKl,i,row,"topKl"));
+  document.getElementById("rpOjecTopic").value = r.ojecTopic;
+  // auto OJEC stats
+  const st = monthStats(month);
+  const rate = st.total ? Math.round(st.done/st.total*100) : 0;
+  const auto = [
+    ["Target pax covered", st.total],
+    ["Actual pax covered", st.done],
+    ["Completion", rate+"%"],
+    ["Average score", st.avg===null?"—":(Math.round(st.avg*100)/100)+"%"]
+  ];
+  document.getElementById("rpOjecAuto").innerHTML = auto.map(a=>
+    '<div style="background:var(--accent-soft);border-radius:11px;padding:10px 14px"><div style="font-size:11px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em">'+a[0]+'</div><div style="font-size:22px;font-weight:800;color:var(--accent)">'+a[1]+'</div></div>').join("");
+  // rookies
+  const tbody=document.getElementById("rpRookieBody"); tbody.innerHTML="";
+  r.rookies.forEach((rk,i)=>{
+    const tr=document.createElement("tr");
+    let cells='<td><input type="text" data-rn="name" data-i="'+i+'" value="'+esc(rk.name||"")+'" placeholder="Rookie name" style="width:130px"></td>';
+    for(let m=0;m<12;m++){
+      cells+='<td><input type="text" data-rn="m" data-i="'+i+'" data-m="'+m+'" value="'+esc(rk.months?rk.months[m]||"":"")+'" style="width:42px;text-align:center" placeholder="-"></td>';
+    }
+    cells+='<td><button class="btn ghost sm danger" data-rn-del="'+i+'">&times;</button></td>';
+    tr.innerHTML=cells; tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", readReportFromForm));
+  tbody.querySelectorAll("[data-rn-del]").forEach(b=> b.addEventListener("click", ()=>{
+    r.rookies.splice(Number(b.dataset.rnDel),1); save(); renderReport(); toast("Rookie removed");
+  }));
+  tlist.querySelectorAll("[data-t-del]").forEach(b=> b.addEventListener("click", ()=>{
+    r.training.splice(Number(b.dataset.tDel),1); save(); renderReport();
+  }));
+}
+function readReportFromForm(){
+  const r = getReport();
+  r.bp.total = document.getElementById("rpBpTotal").value;
+  r.bp.target = document.getElementById("rpBpTarget").value;
+  r.bp.justification = document.getElementById("rpBpJust").value;
+  r.kl.total = document.getElementById("rpKlTotal").value;
+  r.kl.target = document.getElementById("rpKlTarget").value;
+  r.kl.justification = document.getElementById("rpKlJust").value;
+  ["rpBpBest","rpBpLow","rpKlBest","rpKLLow"].forEach((cid,ci)=>{
+    const key = ["bpBest","bpLow","klBest","klLow"][ci];
+    document.querySelectorAll("#"+cid+" input").forEach(inp=>{
+      const i=Number(inp.dataset.i), f=inp.dataset.f;
+      r[key==="bpBest"?"bp":key==="bpLow"?"bp":key==="klBest"?"kl":"kl"][key==="bpBest"||key==="klBest"?"best":"low"][i][f]=inp.value;
+    });
+  });
+  r.training.forEach((t,i)=>{
+    const p=document.querySelector('[data-t="p"][data-i="'+i+'"]');
+    const s=document.querySelector('[data-t="s"][data-i="'+i+'"]');
+    if(p) t.program=p.value; if(s) t.status=s.value;
+  });
+  r.manpower.outlets = document.getElementById("rpOutlets").value;
+  r.manpower.iht = document.getElementById("rpIht").value;
+  r.manpower.streamer = document.getElementById("rpStreamer").value;
+  r.manpower.resign = document.getElementById("rpResign").value;
+  r.ojecTopic = document.getElementById("rpOjecTopic").value;
+  document.querySelectorAll("#rpRookieBody input").forEach(inp=>{
+    const i=Number(inp.dataset.i);
+    if(!r.rookies[i]) return;
+    if(inp.dataset.rn==="name") r.rookies[i].name=inp.value;
+    else if(inp.dataset.rn==="m"){ if(!r.rookies[i].months) r.rookies[i].months=[]; r.rookies[i].months[Number(inp.dataset.m)]=inp.value; }
+  });
+  save();
+}
+document.getElementById("rpTrainAdd").addEventListener("click", ()=>{
+  getReport().training.push({program:"",status:""}); save(); renderReport();
+});
+document.getElementById("rpRookieAdd").addEventListener("click", ()=>{
+  getReport().rookies.push({name:"",months:["-","-","-","-","-","-","-","-","-","-","-","-"]}); save(); renderReport();
+});
+["rpBpTotal","rpBpTarget","rpBpJust","rpKlTotal","rpKlTarget","rpKlJust","rpOutlets","rpIht","rpStreamer","rpResign","rpOjecTopic"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", readReportFromForm);
+});
+document.getElementById("repPrev").addEventListener("click", ()=>{ month=shiftMonth(month,-1); renderReport(); });
+document.getElementById("repNext").addEventListener("click", ()=>{ month=shiftMonth(month,1); renderReport(); });
+
+/* ============ PPTX generation ============ */
+const BRAND_NAVY="1B2A4A", BRAND_TEAL="0B9FC0", BRAND_LIGHT="F2F5F8", BRAND_GRAY="6B7A8D", WHITE="FFFFFF";
+const MONTHS_SHORT=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function n(v){ v=Number(v); return isNaN(v)?0:v; }
+function genPptx(){
+  const r = getReport();
+  const st = monthStats(month);
+  const rate = st.total ? Math.round(st.done/st.total*100) : 0;
+  const ml = monthLabel(month);            // "August 2026"
+  const p = new PptxGenJS();
+  p.layout = "LAYOUT_16x9";                // 10 x 5.625 in
+  p.author = "Kevin Lim Fung Yen";
+  p.company = "EV Supreme";
+  p.title = "IHT Monthly Report — " + ml;
+  function footer(s){
+    s.addText("Private & Confidential", {x:0.4,y:5.25,w:3,h:0.3,fontSize:8,color:BRAND_GRAY,fontFace:"Arial"});
+  }
+  function titleBar(s, txt, sub){
+    s.addShape("rect", {x:0,y:0,w:10,h:0.95,fill:{color:BRAND_NAVY}});
+    s.addText(txt, {x:0.4,y:0.12,w:7,h:0.5,fontSize:22,bold:true,color:WHITE,fontFace:"Arial"});
+    if(sub) s.addText(sub, {x:0.4,y:0.58,w:7,h:0.3,fontSize:12,color:"9FD8E8",fontFace:"Arial"});
+  }
+  // --- Slide 1: cover ---
+  let s=p.addSlide();
+  s.background={color:BRAND_NAVY};
+  s.addShape("rect",{x:0,y:2.5,w:10,h:0.04,fill:{color:BRAND_TEAL}});
+  s.addText("MONTH OF",{x:0.8,y:1.3,w:8,h:0.4,fontSize:16,color:"9FD8E8",bold:true,charSpacing:3,fontFace:"Arial"});
+  s.addText(ml.toUpperCase(),{x:0.8,y:1.7,w:8.4,h:0.9,fontSize:40,bold:true,color:WHITE,fontFace:"Arial"});
+  s.addText("Monthly Report",{x:0.8,y:2.7,w:8,h:0.5,fontSize:20,color:WHITE,fontFace:"Arial"});
+  s.addText("In-house Trainer",{x:0.8,y:3.2,w:8,h:0.4,fontSize:14,color:"B9C6D4",fontFace:"Arial"});
+  s.addText("Dealer : EV Supreme",{x:0.8,y:4.2,w:8,h:0.4,fontSize:14,bold:true,color:WHITE,fontFace:"Arial"});
+  s.addText("Batu Pahat & Kluang",{x:0.8,y:4.55,w:8,h:0.4,fontSize:13,color:"B9C6D4",fontFace:"Arial"});
+  // --- Outlet slide builder ---
+  function outletSlide(o, outletName){
+    let sl=p.addSlide();
+    titleBar(sl,"Outlet Performance",outletName);
+    sl.addText("Top 3 Best Selling Model",{x:0.4,y:1.15,w:4.4,h:0.3,fontSize:12,bold:true,color:BRAND_NAVY,fontFace:"Arial"});
+    const bestRows=[["Ranking","Model (BYD)","Total unit sold"]].concat(
+      o.best.map((b,i)=>[String(i+1), b.m||"—", b.u===""?"—":String(b.u)]));
+    sl.addTable(bestRows,{x:0.4,y:1.5,w:4.4,colW:[0.8,2.6,1.0],fontSize:9,fontFace:"Arial",
+      border:{pt:0.5,color:"D5DEE6"},fill:{color:WHITE},
+      rowH:0.32, align:"left", valign:"middle",
+      boldRow:true, color:BRAND_NAVY, fillHeader:{color:BRAND_LIGHT}});
+    sl.addText("Top 3 Low Selling Model",{x:0.4,y:3.0,w:4.4,h:0.3,fontSize:12,bold:true,color:BRAND_NAVY,fontFace:"Arial"});
+    const lowRows=[["Ranking","Model (BYD)","Total unit sold"]].concat(
+      o.low.map((b,i)=>[String(i+1), b.m||"—", b.u===""?"—":String(b.u)]));
+    sl.addTable(lowRows,{x:0.4,y:3.35,w:4.4,colW:[0.8,2.6,1.0],fontSize:9,fontFace:"Arial",
+      border:{pt:0.5,color:"D5DEE6"},fill:{color:WHITE},rowH:0.32,align:"left",valign:"middle",
+      boldRow:true, color:BRAND_NAVY, fillHeader:{color:BRAND_LIGHT}});
+    // right: total / target
+    sl.addText("Total Sales",{x:5.2,y:1.2,w:2,h:0.3,fontSize:11,bold:true,color:BRAND_GRAY,fontFace:"Arial"});
+    sl.addText(String(o.total===""?"0":o.total),{x:5.2,y:1.5,w:2,h:0.7,fontSize:40,bold:true,color:BRAND_TEAL,fontFace:"Arial"});
+    sl.addText("units",{x:6.6,y:1.85,w:1,h:0.3,fontSize:12,color:BRAND_GRAY,fontFace:"Arial"});
+    sl.addText("Target: "+(o.target===""?"0":o.target)+" units",{x:5.2,y:2.3,w:3,h:0.3,fontSize:12,bold:true,color:BRAND_NAVY,fontFace:"Arial"});
+    sl.addText([
+      {text:"Outlet Best Practices",options:{bold:true,color:BRAND_NAVY,fontSize:11,breakLine:true}},
+      {text:"• Constant training & OJEC for SC",options:{fontSize:10,color:"333",bullet:false,breakLine:true}},
+      {text:"• Constantly invite prospect for test driving",options:{fontSize:10,color:"333",bullet:false,breakLine:true}},
+      {text:"• Post ads on social media to get leads",options:{fontSize:10,color:"333",bullet:false,breakLine:true}}
+    ],{x:5.2,y:2.7,w:4.4,h:1.1,fontFace:"Arial"});
+    sl.addText([
+      {text:"Outlet Justification",options:{bold:true,color:BRAND_NAVY,fontSize:11,breakLine:true}},
+      {text:o.justification||"None",options:{fontSize:10,color:"333"}}
+    ],{x:5.2,y:3.85,w:4.4,h:0.9,fontFace:"Arial"});
+    sl.addText("Link to update online: https://forms.gle/9xSRpFUHbrQTRcfc7",{x:0.4,y:5.0,w:9,h:0.25,fontSize:8,color:BRAND_GRAY,fontFace:"Arial"});
+    footer(sl);
+  }
+  outletSlide(r.bp,"Batu Pahat");
+  outletSlide(r.kl,"Kluang");
+  // --- Slide 4: training ---
+  s=p.addSlide();
+  titleBar(s,"Training", "executed on month "+ml);
+  const tRows=[["No","Program","Status / Details"]];
+  r.training.filter(t=>t.program||t.status).forEach((t,i)=> tRows.push([String(i+1), t.program||"—", t.status||"—"]));
+  if(tRows.length===1) tRows.push(["1","(none entered)",""]);
+  s.addTable(tRows,{x:0.5,y:1.3,w:9,colW:[0.7,4.3,4.0],fontSize:11,fontFace:"Arial",
+    border:{pt:0.5,color:"D5DEE6"},rowH:0.45,valign:"middle",color:"222",
+    boldRow:true, fillHeader:{color:BRAND_LIGHT}});
+  footer(s);
+  // --- Slide 5: manpower ---
+  s=p.addSlide();
+  titleBar(s,"Manpower Update");
+  const m=r.manpower;
+  const stats=[[m.outlets,"Total Outlets"],[state.consultants.length,"Total Sales Advisor"],[m.iht,"Total In-house Trainer"],[m.streamer,"Total Live Streamer"],[m.resign,"SA's Resigned"]];
+  stats.forEach((stt,i)=>{
+    const x=0.5+i*1.85;
+    s.addShape("roundRect",{x:x,y:1.2,w:1.7,h:1.0,fill:{color:BRAND_LIGHT},rectRadius:0.08});
+    s.addText(String(stt[0]),{x:x,y:1.28,w:1.7,h:0.5,align:"center",fontSize:24,bold:true,color:BRAND_TEAL,fontFace:"Arial"});
+    s.addText(stt[1],{x:x,y:1.78,w:1.7,h:0.35,align:"center",fontSize:8.5,color:BRAND_GRAY,fontFace:"Arial"});
+  });
+  s.addText("Top 3 Sales Advisors — Batu Pahat",{x:0.5,y:2.45,w:4.3,h:0.3,fontSize:11,bold:true,color:BRAND_NAVY,fontFace:"Arial"});
+  s.addTable([["Ranking","Name","Units"]].concat(m.topBp.map((t,i)=>[String(i+1),t.n||"—",t.u===""?"—":String(t.u)])),
+    {x:0.5,y:2.8,w:4.3,colW:[0.8,2.6,0.9],fontSize:10,fontFace:"Arial",border:{pt:0.5,color:"D5DEE6"},rowH:0.35,boldRow:true,fillHeader:{color:BRAND_LIGHT}});
+  s.addText("Top 3 Sales Advisors — Kluang",{x:5.2,y:2.45,w:4.3,h:0.3,fontSize:11,bold:true,color:BRAND_NAVY,fontFace:"Arial"});
+  s.addTable([["Ranking","Name","Units"]].concat(m.topKl.map((t,i)=>[String(i+1),t.n||"—",t.u===""?"—":String(t.u)])),
+    {x:5.2,y:2.8,w:4.3,colW:[0.8,2.6,0.9],fontSize:10,fontFace:"Arial",border:{pt:0.5,color:"D5DEE6"},rowH:0.35,boldRow:true,fillHeader:{color:BRAND_LIGHT}});
+  footer(s);
+  // --- Slide 6: OJEC ---
+  s=p.addSlide();
+  titleBar(s,"OJEC Report");
+  const ojRows=[["Item","Summary"],
+    ["OJEC Topic", r.ojecTopic||"—"],
+    ["Average OJEC Score (%)", st.avg===null?"—":(Math.round(st.avg*100)/100)+"%"],
+    ["Target Pax Covered", String(st.total)],
+    ["Actual Pax Covered", String(st.done)],
+    ["OJEC Completion (%)", rate+"%"]];
+  s.addTable(ojRows,{x:0.5,y:1.25,w:5.6,colW:[2.4,3.2],fontSize:11,fontFace:"Arial",border:{pt:0.5,color:"D5DEE6"},rowH:0.45,valign:"middle",boldRow:true,fillHeader:{color:BRAND_LIGHT}});
+  s.addShape("rect",{x:6.4,y:1.25,w:3.1,h:2.6,fill:{color:BRAND_LIGHT},line:{color:"C9D4DE",dashType:"dash"}});
+  s.addText("OJEC Photos\n(add here in PowerPoint)",{x:6.4,y:1.25,w:3.1,h:2.6,align:"center",valign:"middle",fontSize:11,color:BRAND_GRAY,fontFace:"Arial"});
+  s.addText("OJEC DETAILS",{x:0.5,y:4.2,w:3,h:0.3,fontSize:11,bold:true,color:BRAND_NAVY,fontFace:"Arial"});
+  footer(s);
+  // --- Slide 7: rookies ---
+  s=p.addSlide();
+  titleBar(s,"Rookie Sales Performance");
+  const rkRows=[["Rk","Name","Total"].concat(MONTHS_SHORT)];
+  r.rookies.forEach((rk,i)=>{
+    let tot=0; const cells=(rk.months||[]).map(m=>{ const v=Number(m); if(!isNaN(v)) tot+=v; return m===""?"-":String(m); });
+    while(cells.length<12) cells.push("-");
+    rkRows.push([String(i+1), rk.name||"—", String(tot)].concat(cells));
+  });
+  if(rkRows.length===1) rkRows.push(["-","(none entered)","-","-","-","-","-","-","-","-","-","-","-","-"]);
+  s.addTable(rkRows,{x:0.3,y:1.2,w:9.4,colW:[0.4,1.9,0.6,0.5]*1,fontSize:8,fontFace:"Arial",border:{pt:0.5,color:"D5DEE6"},rowH:0.32,valign:"middle",boldRow:true,fillHeader:{color:BRAND_LIGHT}});
+  footer(s);
+  // --- Slide 8: guidelines (static) ---
+  s=p.addSlide();
+  titleBar(s,"Monthly Reporting Guidelines");
+  const guides=["All reports must be prepared and submitted in PowerPoint (PPT) format.",
+    "Each dealer will be allocated a specific time slot to present during the review session.",
+    "Reports must be completed and submitted in the first week of the following month.",
+    "All information and data submitted are strictly private and confidential.",
+    "The report must be prepared based on individual dealer / outlet performance.",
+    "It is compulsory to complete the designated online form for each dealer.",
+    "Please ensure all data is accurate, complete and submitted on time."];
+  s.addText(guides.map((g,i)=>({text:g,options:{bullet:{code:"2022"},breakLine:true,paraSpaceAfter:8}})),
+    {x:0.7,y:1.3,w:8.6,h:3.6,fontSize:13,color:"333",fontFace:"Arial"});
+  footer(s);
+  // --- Slide 9: thank you ---
+  s=p.addSlide();
+  s.background={color:BRAND_NAVY};
+  s.addText("THANK YOU",{x:0,y:2.1,w:10,h:1,align:"center",fontSize:44,bold:true,color:WHITE,fontFace:"Arial"});
+  s.addText("Cooling the Earth by one degree",{x:0,y:3.1,w:10,h:0.5,align:"center",fontSize:14,color:"9FD8E8",fontFace:"Arial"});
+  p.writeFile({fileName:"IHT Monthly Report "+ml+".pptx"}).then(()=>toast("PPTX downloaded")).catch(e=>{ console.error(e); toast("Failed: "+e.message); });
+}
+document.getElementById("genPptx").addEventListener("click", genPptx);
+
+/* ============ Firebase cloud sync (team mode) ============ */
+/* After Kevin creates a Firebase project, paste the web config here and push.
+   Until then the app runs in local-only localStorage mode. */
+const FIREBASE_CONFIG = null;
+let fbRef = null;
+function initFirebase(){
+  if(!FIREBASE_CONFIG) return;
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbRef = firebase.database().ref("ojec-tracker-v1");
+    fbRef.on("value", snap=>{
+      const v = snap.val();
+      if(v && typeof v==="object"){
+        state = v;
+        if(!Array.isArray(state.consultants)) state.consultants=[];
+        if(!Array.isArray(state.records)) state.records=[];
+        if(!state.reportMonths) state.reportMonths={};
+        renderDashboard(); renderLog(); renderRoster(); renderReport();
+      }
+    });
+  }catch(e){ console.warn("Firebase init failed", e); }
+}
+// Patch save() to also push to Firebase when connected
+const _localSave = save;
+save = function(){
+  _localSave();
+  if(fbRef){ try{ fbRef.set(state); }catch(e){} }
+};
+
 /* ============ Init ============ */
 load();
 applyTheme(isDark);
 bindFilterSelects();
 renderFilterSelects();
+initFirebase();
 document.querySelectorAll("#logStatusSeg button").forEach(b=> b.addEventListener("click", ()=>{
   logStatus = b.dataset.status || "";
   document.querySelectorAll("#logStatusSeg button").forEach(x=> x.classList.toggle("active", x===b));
