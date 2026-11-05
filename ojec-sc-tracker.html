@@ -246,7 +246,7 @@ col.c-name{width:26%;} col.c-status{width:14%;} col.c-score{width:14%;} col.c-ac
 /* ============ Forms ============ */
 .field{ margin-bottom:14px;}
 .field label{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-2); margin-bottom:6px;}
-input[type=text], input[type=number], input[type=month], select{
+input[type=text], input[type=number], input[type=month], input[type=email], select{
   width:100%; font-family:inherit; font-size:16px; color:var(--ink);
   background:var(--panel-solid); border:1px solid var(--border-strong); border-radius:11px;
   padding:10px 12px; outline:none; transition:border .15s, box-shadow .15s;
@@ -590,6 +590,7 @@ footer .sig{ font-weight:700; background:linear-gradient(90deg,var(--accent),var
     <div class="field"><label for="cName">Name</label><input type="text" id="cName" placeholder="e.g. Ahmad bin Rahim" autocomplete="off"></div>
     <div class="field"><label for="cRegion">Outlet</label><select id="cRegion"></select></div>
     <div class="field"><label for="cPhone">WhatsApp number</label><input type="text" id="cPhone" inputmode="tel" placeholder="e.g. 0123456789" autocomplete="tel"></div>
+    <div class="field"><label for="cEmail">Email address</label><input type="email" id="cEmail" placeholder="e.g. ahmad@evsupreme.com" autocomplete="email"></div>
     <div class="btns">
       <button class="btn ghost" id="modalCancel">Cancel</button>
       <button class="btn primary" id="modalSave">Save</button>
@@ -862,7 +863,7 @@ function renderRoster(){
     const score = getScore(c.id, month);
     const tr = document.createElement("tr");
     tr.innerHTML =
-      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+'</td>'+
+      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+(c.email?'<div style="font-size:12px"><a href="mailto:'+esc(c.email)+'" style="color:var(--accent);text-decoration:none">'+esc(c.email)+'</a></div>':"")+'</td>'+
       '<td><span class="badge '+(done?"ok":"off")+'">'+(done?"Completed":"No entry")+'</span></td>'+
       '<td>'+fmtScore(score)+'</td>'+
       '<td style="white-space:nowrap">'+
@@ -891,6 +892,7 @@ function openModal(id){
   document.getElementById("modalTitle").textContent = c ? "Edit consultant" : "Add consultant";
   document.getElementById("cName").value = c ? c.name : "";
   document.getElementById("cPhone").value = c ? (c.phone||"") : "";
+  document.getElementById("cEmail").value = c ? (c.email||"") : "";
   regionOptions(c ? c.region : "");
   document.getElementById("overlay").classList.add("show");
   document.getElementById("cName").focus();
@@ -901,13 +903,14 @@ document.getElementById("modalSave").addEventListener("click", ()=>{
   const name = titleCase(document.getElementById("cName").value.trim());
   const region = document.getElementById("cRegion").value.trim();
   const phone = document.getElementById("cPhone").value.trim();
+  const email = document.getElementById("cEmail").value.trim();
   if(!name){ toast("Please enter a name"); document.getElementById("cName").focus(); return; }
   if(editingId){
     const c = state.consultants.find(x=>x.id===editingId);
-    c.name = name; c.region = region; c.phone = phone;
+    c.name = name; c.region = region; c.phone = phone; c.email = email;
     toast("Consultant updated");
   } else {
-    state.consultants.push({ id: uid(), name, region, phone });
+    state.consultants.push({ id: uid(), name, region, phone, email });
     toast("Consultant added");
   }
   save();
@@ -918,10 +921,10 @@ document.getElementById("modalSave").addEventListener("click", ()=>{
 /* ============ Data & Backup ============ */
 function buildCsv(){
   const escCsv = s => '"'+String(s==null?"":s).replace(/"/g,'""')+'"';
-  const lines = ["month,name,completed,score,region,phone"];
+  const lines = ["month,name,completed,score,region,phone,email"];
   state.consultants.forEach(c=>{
     state.records.filter(r=>r.cid===c.id).forEach(r=>{
-      lines.push([r.month, escCsv(c.name), r.completed?"true":"false", r.score===""?"":r.score, escCsv(c.region||""), escCsv(c.phone||"")].join(","));
+      lines.push([r.month, escCsv(c.name), r.completed?"true":"false", r.score===""?"":r.score, escCsv(c.region||""), escCsv(c.phone||""), escCsv(c.email||"")].join(","));
     });
   });
   return lines.join("\n");
@@ -957,6 +960,7 @@ function importCsvText(text){
   const scoreIdx = header.indexOf("score");
   const regionIdx = header.indexOf("region");
   const phoneIdx = header.indexOf("phone");
+  const emailIdx = header.indexOf("email");
   if(nameIdx<0 || monthIdx<0){ toast("Unrecognized CSV format"); return; }
   let added=0, updated=0;
   for(let i=1;i<rows.length;i++){
@@ -965,10 +969,11 @@ function importCsvText(text){
     if(!name) continue;
     let c = state.consultants.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
     if(!c){
-      c = { id: uid(), name: titleCase(name.trim()), region: (regionIdx>=0&&cols[regionIdx])?cols[regionIdx]:"", phone: (phoneIdx>=0&&cols[phoneIdx])?cols[phoneIdx]:"" };
+      c = { id: uid(), name: titleCase(name.trim()), region: (regionIdx>=0&&cols[regionIdx])?cols[regionIdx]:"", phone: (phoneIdx>=0&&cols[phoneIdx])?cols[phoneIdx]:"", email: (emailIdx>=0&&cols[emailIdx])?cols[emailIdx]:"" };
       state.consultants.push(c); added++;
-    } else if(phoneIdx>=0 && cols[phoneIdx]) {
-      c.phone = cols[phoneIdx];
+    } else {
+      if(phoneIdx>=0 && cols[phoneIdx]) c.phone = cols[phoneIdx];
+      if(emailIdx>=0 && cols[emailIdx]) c.email = cols[emailIdx];
       c.name = titleCase(c.name);
     }
     const m = cols[monthIdx] || "";
