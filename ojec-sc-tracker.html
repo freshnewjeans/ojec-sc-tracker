@@ -261,6 +261,14 @@ input:focus, select:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(
 .log-row .meta{ flex:1; min-width:0;}
 .log-row .name{ font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .log-row .score-input{ flex:none; width:96px;}
+.log-row .topic-select{ flex:none; width:320px;}
+.log-row .topic-select select{ font-size:12.5px; padding:8px 8px;}
+.log-row .topic-select select{ font-size:13px; padding:8px 10px;}
+@media (max-width:700px){
+  .log-row{ flex-wrap:wrap; }
+  .log-row .meta{ flex:1 1 100%; }
+  .log-row .topic-select{ flex:1 1 100%; width:auto; }
+}
 .log-row .status-pill{ flex:none; width:88px; text-align:center;}
 .switch{ position:relative; display:inline-block; width:48px; height:28px; flex:none; cursor:pointer;}
 .switch input{ opacity:0; width:0; height:0; position:absolute;}
@@ -629,6 +637,16 @@ function esc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;
 
 /* The two BYD EV Supreme outlets */
 const OUTLETS = ["BYD EV Supreme Batu Pahat", "BYD EV Supreme Kluang"];
+const TOPICS = [
+  "Product: Core Technology",
+  "Product: Features, Benefit & Impacts (FBI)",
+  "Competitor Product Comparison",
+  "SSP: Test Drive",
+  "SSP: Welcome & Greeting",
+  "BYD Objections to Conversion",
+  "BYD Product OJEC",
+  "BYD SSP & MS OJEC"
+];
 function regionOptions(selected){
   const sel = document.getElementById("cRegion");
   sel.innerHTML = '<option value="">Select outlet</option>';
@@ -698,6 +716,10 @@ function fmtScore(n){ return n===null||n===undefined||n==="" ? "—" : (Number(n
 
 /* ---------- data queries ---------- */
 function recFor(cid, m){ return state.records.find(r=>r.cid===cid && r.month===m); }
+function topicOptions(selected){
+  const opts = TOPICS.map(t=>'<option value="'+esc(t)+'"'+(t===selected?" selected":"")+'>'+esc(t)+'</option>').join("");
+  return '<option value=""'+(selected?"":" selected")+'>Select topic</option>'+opts;
+}
 function getScore(cid,m){ const r=recFor(cid,m); return r && r.completed ? r.score : null; }
 function isDone(cid,m){ const r=recFor(cid,m); return !!(r && r.completed); }
 function monthStats(m){
@@ -812,6 +834,7 @@ function renderLog(){
     row.innerHTML =
       '<div class="meta"><div class="name">'+esc(titleCase(c.name))+'</div>'+
         '<div class="m2" style="font-size:12px;color:var(--ink-3)">'+(c.region?esc(c.region):"&nbsp;")+'</div></div>'+
+      '<div class="topic-select"><select class="log-topic" data-cid="'+c.id+'" title="'+esc(r&&r.topic?r.topic:"Choose OJEC topic")+'" aria-label="OJEC topic">'+ topicOptions(r ? r.topic : "") +'</select></div>'+
       '<div class="score-input"><input type="number" min="0" max="100" step="0.1" class="log-score" data-cid="'+c.id+'" value="'+esc(score)+'" placeholder="Score" '+(done?"":"disabled")+'></div>'+
       '<div class="status-pill"><span class="badge '+(done?"ok":"wait")+'" id="pill-'+c.id+'">'+(done?"Completed":"Pending")+'</span></div>'+
       (done ? "" : waMarkup(c)) +
@@ -845,8 +868,17 @@ function bindLogEvents(){
       renderDashboard();
     });
   });
+  document.querySelectorAll(".log-topic").forEach(el=>{
+    el.addEventListener("change", e=>{
+      const cid = e.target.dataset.cid;
+      let r = recFor(cid, month);
+      if(!r){ r={ cid, month, completed:false, score:"", topic:e.target.value }; state.records.push(r); }
+      else { r.topic = e.target.value; }
+      save(); renderDashboard();
+      toast(e.target.value ? "Topic saved" : "Topic cleared");
+    });
+  });
 }
-
 /* ============ Render: Roster ============ */
 function renderRoster(){
   const body = document.getElementById("rosterBody");
@@ -861,9 +893,11 @@ function renderRoster(){
   rosterList.forEach(c=>{
     const done = isDone(c.id, month);
     const score = getScore(c.id, month);
+    const rec = recFor(c.id, month);
+    const topic = rec && rec.topic ? rec.topic : "";
     const tr = document.createElement("tr");
     tr.innerHTML =
-      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+(c.email?'<div style="font-size:12px"><a href="mailto:'+esc(c.email)+'" style="color:var(--accent);text-decoration:none">'+esc(c.email)+'</a></div>':"")+'</td>'+
+      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+(c.email?'<div style="font-size:12px"><a href="mailto:'+esc(c.email)+'" style="color:var(--accent);text-decoration:none">'+esc(c.email)+'</a></div>':"")+(topic?'<div style="font-size:12px;color:var(--accent)">'+esc(topic)+'</div>':"")+'</td>'+
       '<td><span class="badge '+(done?"ok":"off")+'">'+(done?"Completed":"No entry")+'</span></td>'+
       '<td>'+fmtScore(score)+'</td>'+
       '<td style="white-space:nowrap">'+
@@ -921,10 +955,10 @@ document.getElementById("modalSave").addEventListener("click", ()=>{
 /* ============ Data & Backup ============ */
 function buildCsv(){
   const escCsv = s => '"'+String(s==null?"":s).replace(/"/g,'""')+'"';
-  const lines = ["month,name,completed,score,region,phone,email"];
+  const lines = ["month,name,completed,score,topic,region,phone,email"];
   state.consultants.forEach(c=>{
     state.records.filter(r=>r.cid===c.id).forEach(r=>{
-      lines.push([r.month, escCsv(c.name), r.completed?"true":"false", r.score===""?"":r.score, escCsv(c.region||""), escCsv(c.phone||""), escCsv(c.email||"")].join(","));
+      lines.push([r.month, escCsv(c.name), r.completed?"true":"false", r.score===""?"":r.score, escCsv(r.topic||""), escCsv(c.region||""), escCsv(c.phone||""), escCsv(c.email||"")].join(","));
     });
   });
   return lines.join("\n");
@@ -961,6 +995,7 @@ function importCsvText(text){
   const regionIdx = header.indexOf("region");
   const phoneIdx = header.indexOf("phone");
   const emailIdx = header.indexOf("email");
+  const topicIdx = header.indexOf("topic");
   if(nameIdx<0 || monthIdx<0){ toast("Unrecognized CSV format"); return; }
   let added=0, updated=0;
   for(let i=1;i<rows.length;i++){
@@ -981,8 +1016,9 @@ function importCsvText(text){
     const score = scoreIdx>=0 ? cols[scoreIdx] : "";
     if(m){
       let r = recFor(c.id, m);
-      if(!r){ r={ cid:c.id, month:m, completed:done, score:score }; state.records.push(r); }
-      else { r.completed=done; r.score=score; }
+      const topic = topicIdx>=0 ? (cols[topicIdx]||"") : "";
+      if(!r){ r={ cid:c.id, month:m, completed:done, score:score, topic:topic }; state.records.push(r); }
+      else { r.completed=done; r.score=score; if(topic) r.topic=topic; }
       updated++;
     }
   }
