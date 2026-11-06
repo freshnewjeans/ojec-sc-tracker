@@ -453,6 +453,10 @@ footer .sig{ font-weight:700; background:linear-gradient(90deg,var(--accent),var
         <div class="sub">Your team list — used by every month&rsquo;s OJEC log</div>
       </div>
       <div class="controls">
+        <div class="seg" id="rosterSeg" role="group" aria-label="Roster view">
+          <button data-arch="active" class="active">Active</button>
+          <button data-arch="archived">Archived</button>
+        </div>
         <select class="outlet-filter" data-outlet aria-label="Filter by outlet">
           <option value="">All outlets</option>
           <option value="BYD EV Supreme Batu Pahat">BYD EV Supreme Batu Pahat</option>
@@ -624,6 +628,7 @@ let month = monthKey(new Date());
 let editingId = null;
 let outletFilter = "";
 let logStatus = "";
+let rosterTab = "active";
 
 /* ---------- helpers ---------- */
 function monthKey(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); }
@@ -716,6 +721,8 @@ function fmtScore(n){ return n===null||n===undefined||n==="" ? "—" : (Number(n
 
 /* ---------- data queries ---------- */
 function recFor(cid, m){ return state.records.find(r=>r.cid===cid && r.month===m); }
+function isActive(c){ return c.archived !== true; }
+function recCount(cid){ return state.records.filter(r=>r.cid===cid).length; }
 function topicOptions(selected){
   const opts = TOPICS.map(t=>'<option value="'+esc(t)+'"'+(t===selected?" selected":"")+'>'+esc(t)+'</option>').join("");
   return '<option value=""'+(selected?"":" selected")+'>Select topic</option>'+opts;
@@ -723,15 +730,16 @@ function topicOptions(selected){
 function getScore(cid,m){ const r=recFor(cid,m); return r && r.completed ? r.score : null; }
 function isDone(cid,m){ const r=recFor(cid,m); return !!(r && r.completed); }
 function monthStats(m){
-  const total = state.consultants.length;
-  const done = state.consultants.filter(c=>isDone(c.id,m));
+  const active = state.consultants.filter(isActive);
+  const total = active.length;
+  const done = active.filter(c=>isDone(c.id,m));
   const scores = done.map(c=>getScore(c.id,m)).filter(s=>s!==null && s!==undefined && s!=="");
   const rate = total ? Math.round(done.length/total*100) : 0;
   const avg = scores.length ? scores.reduce((a,b)=>a+Number(b),0)/scores.length : null;
   return { total, done:done.length, rate, avg, doneList:done, scores };
 }
 function sortedByScore(m){
-  return state.consultants
+  return state.consultants.filter(isActive)
     .map(c=>({ c, done:isDone(c.id,m), score:getScore(c.id,m) }))
     .sort((a,b)=>{
       if(a.done!==b.done) return a.done? -1:1;
@@ -776,13 +784,13 @@ function renderDashboard(){
   document.getElementById("heroSub").textContent =
     (stats.total===0 ? "Add consultants on the SC Roster tab"
      : "of " + stats.total + " consultant" + (stats.total===1?"":"s") + " · average score " + (stats.avg===null?"—":fmtScore(stats.avg)));
-  document.getElementById("scoreboardNote").textContent = stats.total===0 ? "Add consultants to begin" : (stats.done + " of " + stats.total + " completed this month");
+  document.getElementById("scoreboardNote").textContent = stats.total===0 ? (state.consultants.length ? "No active consultants" : "Add consultants to begin") : (stats.done + " of " + stats.total + " completed this month");
   renderRing(stats.rate);
 
   const list = document.getElementById("scoreboard");
   list.innerHTML = "";
   if(stats.total===0){
-    list.innerHTML = '<div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>No consultants yet.<br>Add your sales team on the <b>SC Roster</b> tab.</div>';
+    list.innerHTML = '<div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>'+(state.consultants.length ? "No active consultants.<br>Reactivate one on the <b>SC Roster</b> tab." : "No consultants yet.<br>Add your sales team on the <b>SC Roster</b> tab.")+'</div>';
     return;
   }
   const sorted = sortedByScore(month).filter(x=>outletMatches(x.c));
@@ -819,7 +827,7 @@ function renderLog(){
     list.innerHTML = '<div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>No consultants yet. Add your team on the <b>SC Roster</b> tab first.</div>';
     return;
   }
-  let logList = state.consultants.filter(outletMatches);
+  let logList = state.consultants.filter(isActive).filter(outletMatches);
   if(!outletFilter) logList = outletSort(logList); else logList.sort((a,b)=>a.name.localeCompare(b.name));
   if(logStatus==="done") logList = logList.filter(c=>isDone(c.id,month));
   else if(logStatus==="pending") logList = logList.filter(c=>!isDone(c.id,month));
@@ -887,36 +895,44 @@ function renderRoster(){
     body.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.5" width="34" height="34"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M14.5 8.4a3.4 3.4 0 0 0 6 0M16 13.6a5.5 5.5 0 0 1 4.5 6.4"/></svg></div>No consultants yet. Click <b>Add consultant</b> to build your team.</div></td></tr>';
     return;
   }
-  let rosterList = state.consultants.filter(outletMatches);
+  let rosterList = state.consultants.filter(outletMatches)
+    .filter(c=> rosterTab==="archived" ? c.archived===true : isActive(c));
   if(!outletFilter) rosterList = outletSort(rosterList); else rosterList.sort((a,b)=>a.name.localeCompare(b.name));
-  if(rosterList.length===0){ body.innerHTML = '<tr><td colspan="4"><div class="empty">No consultants at this outlet.</div></td></tr>'; return; }
+  if(rosterList.length===0){
+    const msg = rosterTab==="archived" ? "No archived consultants." : "No active consultants here. Add one, or check the Archived tab.";
+    body.innerHTML = '<tr><td colspan="4"><div class="empty">'+msg+'</div></td></tr>'; return;
+  }
   rosterList.forEach(c=>{
     const done = isDone(c.id, month);
     const score = getScore(c.id, month);
     const rec = recFor(c.id, month);
     const topic = rec && rec.topic ? rec.topic : "";
+    const archived = c.archived === true;
+    const months = recCount(c.id);
     const tr = document.createElement("tr");
     tr.innerHTML =
-      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+(c.email?'<div style="font-size:12px"><a href="mailto:'+esc(c.email)+'" style="color:var(--accent);text-decoration:none">'+esc(c.email)+'</a></div>':"")+(topic?'<div style="font-size:12px;color:var(--accent)">'+esc(topic)+'</div>':"")+'</td>'+
-      '<td><span class="badge '+(done?"ok":"off")+'">'+(done?"Completed":"No entry")+'</span></td>'+
+      '<td><b>'+esc(titleCase(c.name))+'</b>'+(c.region?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.region)+'</div>':"")+(c.phone?'<div style="font-size:12px;color:var(--ink-3)">'+esc(c.phone)+'</div>':"")+(c.email?'<div style="font-size:12px"><a href="mailto:'+esc(c.email)+'" style="color:var(--accent);text-decoration:none">'+esc(c.email)+'</a></div>':"")+(topic?'<div style="font-size:12px;color:var(--accent)">'+esc(topic)+'</div>':"")+(archived?'<div style="font-size:12px;color:var(--ink-3)">'+months+' month'+(months===1?"":"s")+' on record</div>':"")+'</td>'+
+      '<td>'+(archived?'<span class="badge off">Archived</span>':'<span class="badge '+(done?"ok":"off")+'">'+(done?"Completed":"No entry")+'</span>')+'</td>'+
       '<td>'+fmtScore(score)+'</td>'+
       '<td style="white-space:nowrap">'+
         '<button class="btn ghost sm edit-sc" data-id="'+c.id+'">Edit</button>'+
-        '<button class="btn ghost sm danger del-sc" data-id="'+c.id+'">Delete</button>'+
+        (archived
+          ? '<button class="btn ghost sm unarc-sc" data-id="'+c.id+'">Reactivate</button>'
+          : '<button class="btn ghost sm arc-sc" data-id="'+c.id+'">Deactivate</button>')+
       '</td>';
     body.appendChild(tr);
   });
   body.querySelectorAll(".edit-sc").forEach(b=> b.addEventListener("click", ()=> openModal(b.dataset.id)));
-  body.querySelectorAll(".del-sc").forEach(b=> b.addEventListener("click", ()=> deleteConsultant(b.dataset.id)));
+  body.querySelectorAll(".arc-sc").forEach(b=> b.addEventListener("click", ()=> setArchived(b.dataset.id, true)));
+  body.querySelectorAll(".unarc-sc").forEach(b=> b.addEventListener("click", ()=> setArchived(b.dataset.id, false)));
 }
-function deleteConsultant(id){
+function setArchived(id, archived){
   const c = state.consultants.find(x=>x.id===id);
   if(!c) return;
-  if(!confirm('Delete "'+c.name+'" and all their OJEC records?')) return;
-  state.consultants = state.consultants.filter(x=>x.id!==id);
-  state.records = state.records.filter(r=>r.cid!==id);
+  if(archived && !confirm('Deactivate "'+c.name+'"?\n\nThey will be removed from the Dashboard and Monthly Log, but all their past OJEC records are kept and you can reactivate them anytime.')) return;
+  c.archived = archived;
   save(); renderRoster(); renderLog(); renderDashboard();
-  toast("Consultant removed");
+  toast(archived ? "Consultant deactivated (records kept)" : "Consultant reactivated");
 }
 
 /* ============ Modal ============ */
@@ -955,10 +971,10 @@ document.getElementById("modalSave").addEventListener("click", ()=>{
 /* ============ Data & Backup ============ */
 function buildCsv(){
   const escCsv = s => '"'+String(s==null?"":s).replace(/"/g,'""')+'"';
-  const lines = ["month,name,completed,score,topic,region,phone,email"];
+  const lines = ["month,name,completed,score,topic,region,phone,email,archived"];
   state.consultants.forEach(c=>{
     state.records.filter(r=>r.cid===c.id).forEach(r=>{
-      lines.push([r.month, escCsv(c.name), r.completed?"true":"false", r.score===""?"":r.score, escCsv(r.topic||""), escCsv(c.region||""), escCsv(c.phone||""), escCsv(c.email||"")].join(","));
+      lines.push([r.month, escCsv(c.name), r.completed?"true":"false", r.score===""?"":r.score, escCsv(r.topic||""), escCsv(c.region||""), escCsv(c.phone||""), escCsv(c.email||""), c.archived===true?"true":"false"].join(","));
     });
   });
   return lines.join("\n");
@@ -996,6 +1012,7 @@ function importCsvText(text){
   const phoneIdx = header.indexOf("phone");
   const emailIdx = header.indexOf("email");
   const topicIdx = header.indexOf("topic");
+  const archivedIdx = header.indexOf("archived");
   if(nameIdx<0 || monthIdx<0){ toast("Unrecognized CSV format"); return; }
   let added=0, updated=0;
   for(let i=1;i<rows.length;i++){
@@ -1004,11 +1021,12 @@ function importCsvText(text){
     if(!name) continue;
     let c = state.consultants.find(x=>x.name.trim().toLowerCase()===name.trim().toLowerCase());
     if(!c){
-      c = { id: uid(), name: titleCase(name.trim()), region: (regionIdx>=0&&cols[regionIdx])?cols[regionIdx]:"", phone: (phoneIdx>=0&&cols[phoneIdx])?cols[phoneIdx]:"", email: (emailIdx>=0&&cols[emailIdx])?cols[emailIdx]:"" };
+      c = { id: uid(), name: titleCase(name.trim()), region: (regionIdx>=0&&cols[regionIdx])?cols[regionIdx]:"", phone: (phoneIdx>=0&&cols[phoneIdx])?cols[phoneIdx]:"", email: (emailIdx>=0&&cols[emailIdx])?cols[emailIdx]:"", archived: (archivedIdx>=0 && cols[archivedIdx]==="true") };
       state.consultants.push(c); added++;
     } else {
       if(phoneIdx>=0 && cols[phoneIdx]) c.phone = cols[phoneIdx];
       if(emailIdx>=0 && cols[emailIdx]) c.email = cols[emailIdx];
+      if(archivedIdx>=0) c.archived = cols[archivedIdx]==="true";
       c.name = titleCase(c.name);
     }
     const m = cols[monthIdx] || "";
@@ -1172,7 +1190,7 @@ function renderReport(){
   document.getElementById("rpIht").value = r.manpower.iht;
   document.getElementById("rpStreamer").value = r.manpower.streamer;
   document.getElementById("rpResign").value = r.manpower.resign;
-  document.getElementById("rpSaCount").textContent = state.consultants.length;
+  document.getElementById("rpSaCount").textContent = state.consultants.filter(isActive).length;
   const topBp=document.getElementById("rpTopBp"); topBp.innerHTML=""; r.manpower.topBp.forEach((row,i)=>saRow(topBp,i,row,"topBp"));
   const topKl=document.getElementById("rpTopKl"); topKl.innerHTML=""; r.manpower.topKl.forEach((row,i)=>saRow(topKl,i,row,"topKl"));
   document.getElementById("rpOjecTopic").value = r.ojecTopic;
@@ -1435,6 +1453,11 @@ document.querySelectorAll("#logStatusSeg button").forEach(b=> b.addEventListener
   logStatus = b.dataset.status || "";
   document.querySelectorAll("#logStatusSeg button").forEach(x=> x.classList.toggle("active", x===b));
   renderLog(); renderDashboard();
+}));
+document.querySelectorAll("#rosterSeg button").forEach(b=> b.addEventListener("click", ()=>{
+  rosterTab = b.dataset.arch || "active";
+  document.querySelectorAll("#rosterSeg button").forEach(x=> x.classList.toggle("active", x===b));
+  renderRoster();
 }));
 showView("dashboard");
 </script>

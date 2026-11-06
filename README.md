@@ -6,7 +6,7 @@ Designed & Created by **Kevin Lim Fung Yen**.
 
 ## Features
 
-- **SC Roster** — add, edit and remove your sales consultants, assigning each to an outlet (**BYD EV Supreme Batu Pahat** or **BYD EV Supreme Kluang**), a WhatsApp number and an **email address**.
+- **SC Roster** — add, edit and remove your sales consultants, assigning each to an outlet (**BYD EV Supreme Batu Pahat** or **BYD EV Supreme Kluang**), a WhatsApp number and an **email address**. Consultants who resigned are **deactivated** (archived) rather than deleted — their past OJEC records are kept and they can be reactivated anytime from the **Archived** tab.
 - **OJEC topics** — each consultant picks the OJEC topic for the month from a fixed list (Core Technology, FBI, Competitor Comparison, Test Drive, Welcome & Greeting, Objections to Conversion, Product OJEC, SSP & MS OJEC).
 - **WhatsApp reminders** — any consultant who has **not** completed OJEC this month shows a WhatsApp button that opens a pre-filled reminder message; completed consultants have no WhatsApp option.
 - **Monthly Log** — for any month, pick each consultant's **OJEC topic**, mark them **completed** with a toggle and enter their **OJEC score**. Filter by **All / Completed / Pending** and by outlet.
